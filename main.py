@@ -69,10 +69,10 @@ def login(username: str = Body(...), password: str = Body(...)):
 def registration(name: str = Body(..., embed=True),
                  pas: str = Body(..., embed=True)):
     return db_action(
-        f'''
-            insert into users (username, password) values ('{name}', '{pas}')
+        '''
+            insert into users (username, password) values (? , ?)
         ''',
-        (),
+        (name, pas),
         DBAction.commit,
     )
 
