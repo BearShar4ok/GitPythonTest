@@ -68,6 +68,9 @@ def login(username: str = Body(...), password: str = Body(...)):
 @app.post('/registration')
 def registration(name: str = Body(..., embed=True),
                  pas: str = Body(..., embed=True)):
+    user = checkUserInDB(name)
+    if user is not None:
+        return "ERROR!!!!!!!!!!!!!!!!!"
     return db_action(
         '''
             insert into users (username, password) values (? , ?)
@@ -76,5 +79,12 @@ def registration(name: str = Body(..., embed=True),
         DBAction.commit,
     )
 
-
+def checkUserInDB(username: str):
+    return db_action(
+        '''
+            select * from users where username = ?
+        ''',
+        (username,),
+        DBAction.fetchone,
+    )
 uvicorn.run(app)
