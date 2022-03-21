@@ -1,1 +1,1 @@
-SECRET = 'qweqwew'
+SECRET = 'wghhjb567tyt45yrthr'

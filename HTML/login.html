@@ -1,15 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Регистрация</title>
+    <title>Войти</title>
 </head>
 <body>
     <input type="text" id="login">
     <input type="text" id="password">
-    <input type="text" id="password2">
     <button id="do_login" type="button" onclick="submit_form()">
-        Зарегистрироваться
+        Войти
     </button>
 
     <script>
@@ -18,15 +18,8 @@
             console.log(login.value)
             let password = document.getElementById('password')
             console.log(password.value)
-            let password2 = document.getElementById('password2')
-            console.log(password2.value)
 
-            if (password.value != password2.value) {
-                console.log("ne sovpal")
-                return
-            }
-
-            let response = await fetch('/api/register', {
+            let response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,15 +31,13 @@
             })
             let data = await response.json()
             console.log(data)
-            if (response.status == 400){
-                alert("User has already been")
-                return
-            }
-            if (response.status !=200){
-                alert("Warning")
-                return
-            }
-            window.location = "/login"
+
+            let token = data['token']
+
+            localStorage.setItem('token', token)
+            console.log(localStorage.getItem('token'))
+
+            window.location = "/"
         }
     </script>
 </body>

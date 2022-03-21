@@ -80,6 +80,10 @@ def send_htm(name: str):
 
 
 @app.get('/login')
+def login():
+    return send_htm("login")
+
+@app.get('/')
 def index():
     return send_htm("index")
 
@@ -87,6 +91,14 @@ def index():
 @app.get('/reg')
 def registr_page():
     return send_htm("reg")
+
+
+@app.get('/api/ping')
+def ping(user:list = Depends(get_user)):
+    return {
+        'response' : 'pong',
+        'username':user[1],
+    }
 
 
 @app.post('/api/login')

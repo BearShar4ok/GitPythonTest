@@ -1,36 +1,23 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Войти</title>
+    <title>Крутой сайт</title>
 </head>
 <body>
-    <input type="text" id="login">
-    <input type="text" id="password">
-    <button id="do_login" type="button" onclick="submit_form()">
-        Войти
-    </button>
-
     <script>
-        async function submit_form() {
-            let login = document.getElementById('login')
-            console.log(login.value)
-            let password = document.getElementById('password')
-            console.log(password.value)
+        async  function main(){
+            let token  = localStorage.getItem('token')
+            let response = await fetch('/api/ping', {
 
-            let response = await fetch('/api/login', {
-                method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: login.value,
-                    password: password.value,
-                })
+                    'Authorization': token
+                }
             })
             let data = await response.json()
             console.log(data)
         }
+        main()
     </script>
 </body>
 </html>
