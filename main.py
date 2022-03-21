@@ -1,8 +1,14 @@
+import sqlite3
 from enum import Enum, auto
 
+import jose.exceptions
 import uvicorn
-from fastapi import FastAPI, Body
-import sqlite3
+from fastapi import FastAPI, Body, Depends, Header
+from fastapi.exceptions import HTTPException
+from fastapi.responses import HTMLResponse
+from jose import jwt
+
+import config
 
 app = FastAPI()
 
@@ -49,42 +55,86 @@ def create_db():
     conn.close()
 
 
-@app.get('/')
+def get_user(authorization: str = Header(...)):
+    try:
+        user_id = jwt.decode(authorization, config.SECRET, algorithms=['HS256'])['id']
+    except jose.exceptions.JWTError:
+        raise HTTPException(
+            status_code=400,
+            detail='Неверный токен'
+        )
+
+    user = db_action(
+        '''
+            select * from users where id = ?
+        ''',
+        (user_id,),
+        DBAction.fetchone,
+    )
+    return user
+
+
+def send_htm(name: str):
+    with open(f'HTML/{name}.html', 'r', encoding='utf-8') as f:
+        return HTMLResponse(f.read())
+
+
+@app.get('/login')
 def index():
-    return 'Hello, world!'
+    return send_htm("index")
 
 
-@app.post('/login')
+@app.get('/reg')
+def registr_page():
+    return send_htm("reg")
+
+
+@app.post('/api/login')
 def login(username: str = Body(...), password: str = Body(...)):
-    return db_action(
+    user = db_action(
         '''
             select * from users where username = ? and password = ?
         ''',
         (username, password),
         DBAction.fetchone,
     )
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='Пользователь не найден'
+        )
+
+    token = jwt.encode({'id': user[0]}, config.SECRET, algorithm='HS256')
+    return {
+        'token': token
+    }
 
 
-@app.post('/registration')
-def registration(name: str = Body(..., embed=True),
-                 pas: str = Body(..., embed=True)):
-    user = checkUserInDB(name)
-    if user is not None:
-        return "ERROR!!!!!!!!!!!!!!!!!"
-    return db_action(
-        '''
-            insert into users (username, password) values (? , ?)
-        ''',
-        (name, pas),
-        DBAction.commit,
-    )
-
-def checkUserInDB(username: str):
-    return db_action(
+@app.post('/api/register')
+def register(username: str = Body(...), password: str = Body(...)):
+    user = db_action(
         '''
             select * from users where username = ?
         ''',
         (username,),
         DBAction.fetchone,
     )
-uvicorn.run(app)
+    if user:
+        raise HTTPException(
+            status_code=400,
+            detail='Пользователь уже существует'
+        )
+
+    db_action(
+        '''
+            insert into users (username, password) values (?, ?)
+        ''',
+        (username, password),
+        DBAction.commit,
+    )
+    return {
+        'message':'SUccess'
+    }
+
+if __name__ == '__main__':
+    uvicorn.run('main:app', reload=True)
