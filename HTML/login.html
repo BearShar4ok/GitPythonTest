@@ -41,7 +41,10 @@
                 alert("введите данные заново(нет такого пользователя)")
                 return
             }
-
+            if (response.status != 200){
+                alert("что-то не так")
+                return
+            }
             window.location = "/"
         }
     </script>
