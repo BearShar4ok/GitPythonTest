@@ -9,7 +9,6 @@
         async  function main(){
             let token  = localStorage.getItem('token')
             let response = await fetch('/api/ping', {
-
                 headers: {
                     'Authorization': token
                 }
