@@ -3,20 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <title>Крутой сайт</title>
+    <style>
+        #code, #result {
+            width: 200px;
+            height: 200px;
+        }
+
+    </style>
 </head>
 <body>
-    <script>
-        async  function main(){
-            let token  = localStorage.getItem('token')
-            let response = await fetch('/api/ping', {
-                headers: {
-                    'Authorization': token
-                }
+<textarea id="code">
+print("Hello world")
+</textarea>
+<br/>
+<button id="execude" onclick="execude_code()">
+    Сдать
+</button>
+<br/>
+<textarea id="result" readonly>
+
+</textarea>
+<script>
+    async function execude_code() {
+        let token = localStorage.getItem('token')
+        let code = document.getElementById("code").value
+        let response = await fetch('/api/execute', {
+            method: "POST",
+            headers: {
+                'Authorization': token,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                'code': code
             })
-            let data = await response.json()
-            console.log(data)
-        }
-        main()
-    </script>
+        })
+        let data = await response.json()
+        console.log(data)
+
+        let result = document.getElementById('result')
+
+        result.value = data['result']
+    }
+
+    main()
+</script>
 </body>
 </html>
