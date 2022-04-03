@@ -1,22 +1,17 @@
-import os
-import random
 import sqlite3
-import string
-import subprocess
-from enum import Enum, auto
 
 import jose.exceptions
 import uvicorn
-from fastapi import FastAPI, Body, Depends, Header
+from fastapi import FastAPI, Body, Header, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.responses import HTMLResponse
 from jose import jwt
 
 import config
 from utils import db_action, DBAction, run_code
+from taskChecker import get_task
 
 app = FastAPI()
-
 
 
 @app.on_event('startup')
@@ -30,21 +25,16 @@ def create_db():
             username varchar not null,
             password varchar not null
         );
-        create table if not exists users (
+    ''')
+    cursor.execute('''
+        create table if not exists tasks (
             id integer primary key,
-            username varchar not null,
+            name varchar not null,
             description varchar,
             output varchar not null
         );
     ''')
-    cursor.execute('''
-            create table if not exists users (
-                id integer primary key,
-                username varchar not null,
-                description varchar,
-                output varchar not null
-            );
-        ''')
+    conn.commit()
     cursor.close()
     conn.close()
 
@@ -68,39 +58,43 @@ def get_user(authorization: str = Header(...)):
     return user
 
 
-def send_htm(name: str):
-    with open(f'HTML/{name}.html', 'r', encoding='utf-8') as f:
+def send_html(name: str):
+    with open(f'html/{name}.html', 'r', encoding='utf-8') as f:
         return HTMLResponse(f.read())
-
-
-@app.get('/login')
-def login():
-    return send_htm("login")
 
 
 @app.get('/')
 def index():
-    return send_htm("index")
+    return send_html('index')
 
 
-@app.get('/reg')
-def registr_page():
-    return send_htm("reg")
+@app.get('/login')
+def login_page():
+    return send_html('login')
+
+
+@app.get('/register')
+def register_page():
+    return send_html('register')
 
 
 @app.get('/api/ping')
 def ping(user: list = Depends(get_user)):
     return {
-        'response': 'pong',
+        'response': 'Pong',
         'username': user[1],
     }
 
 
 @app.post('/api/execute')
-def execute(user: list = Depends(get_user), code: str = Body(..., embed=True)):
+def execute(
+    user: list = Depends(get_user),
+    code: str = Body(..., embed=True),
+):
     return {
-        'result': run_code(code)
+        'result': run_code(code),
     }
+
 
 @app.post('/api/login')
 def login(username: str = Body(...), password: str = Body(...)):
@@ -145,8 +139,9 @@ def register(username: str = Body(...), password: str = Body(...)):
         (username, password),
         DBAction.commit,
     )
+
     return {
-        'message': 'SUccess'
+        'message': 'Успешная регистрация'
     }
 
 
